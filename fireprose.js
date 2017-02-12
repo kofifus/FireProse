@@ -1,5 +1,6 @@
 "use strict";
 
+// the FireProse 'class' using https://github.com/kofifus/New
 function FireProse() {
   const Step = window.pmCollabReqs.Step;
   const sendableSteps = window.pmCollabReqs.sendableSteps;
