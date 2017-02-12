@@ -168,7 +168,7 @@ function FireProse() {
       let getVersionNum = listeningVer;
       versionListen(-1);
       listeningVer = -1;
-      setTimeout(() => getVersion(getVersionNum), 0); // context switch, we can't start a transaction inside onValue
+      getVersion(getVersionNum);
     });
   }
 
