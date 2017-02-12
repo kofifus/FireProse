@@ -1,0 +1,111 @@
+<link rel=stylesheet href=fireprose.css>
+
+<div style="padding: 30px 30px 30px 30px; background: white;">
+  <label>API key:&nbsp;</label>
+  <input id="apiKey">
+  <br>
+  <label>Database URL:&nbsp;</label>
+  <input id="databaseURL">
+  <br>
+  <label>Note name:&nbsp;</label>
+  <input id="noteName">
+  <br>
+  <button id="connectdb">connect</button>
+  <br>
+  <br>
+  <br>
+  <div id=editor style="width:500px; height:500px;display:none;"></div>
+</div>
+
+<script src="https://cdn.rawgit.com/kofifus/New/c5a12196/new.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.4.0/firebase.js"></script>
+<script src="bundle_collab.js"></script>
+<script src="fireprose.js"></script>
+
+<script>
+  "use strict";
+
+  let apiKeyInput = document.getElementById('apiKey'),
+    databaseURLInput = document.getElementById('databaseURL'),
+    noteNameInput = document.getElementById('noteName'),
+    connectBtn = document.getElementById('connectdb'),
+    editor = document.getElementById('editor');
+
+  apiKeyInput.value = 'AIzaSyCPLAPHxYZK3Ga8HCwSjEHQEbCs_ - WsW5Q';
+  databaseURLInput.value = 'https://project-8083319387023885522.firebaseio.com';
+  noteNameInput.value = 'mynote';
+
+  connectBtn.addEventListener("click", () => {
+    let apiKey = apiKeyInput.value,
+      databaseURL = databaseURLInput.value,
+      noteName = noteNameInput.value;
+
+    if (apiKey === '' || databaseURL === '' || noteName === '') {
+      alert('signin failed');
+      return;
+    }
+
+    let fbApp = window.firebase.initializeApp({
+      apiKey,
+      databaseURL
+    }, 'appName' + new Date().getTime());
+
+    return fbApp.auth().signInAnonymously().then(user => {
+      apiKeyInput.disabled = databaseURLInput.disabled = noteNameInput.disabled = connectBtn.disabled = true;
+      let baseref = fbApp.database().ref('prosemirror/' + noteName);
+      setTimeout(() => start(baseref), 0);
+    }, (err) => {
+      alert('signin failed');
+    });
+  });
+
+
+  function start(baseref) {
+    const Schema = pmCollabReqs.Schema;
+    const baseSchema = pmCollabReqs.baseSchema;
+    const addListNodes = pmCollabReqs.addListNodes;
+    const exampleSetup = pmCollabReqs.exampleSetup;
+    const buildMenuItems = pmCollabReqs.buildMenuItems;
+    const MenuBarEditorView = pmCollabReqs.MenuBarEditorView;
+    const EditorState = pmCollabReqs.EditorState;
+    const history = pmCollabReqs.history;
+    const DOMParser = pmCollabReqs.DOMParser;
+    const collab = pmCollabReqs.collab;
+
+    const schema = new Schema({
+      nodes: addListNodes(baseSchema.nodeSpec, "paragraph block*", "block"),
+      marks: baseSchema.markSpec
+    })
+
+    let fireProse;
+
+    let editState = EditorState.create({
+      doc: DOMParser.fromSchema(schema).parse(''),
+      plugins: exampleSetup({
+        schema, history: false
+      }).concat([
+        history({
+          preserveItems: true
+        }),
+        collab({
+          version: 0
+        })
+      ])
+    })
+
+    let view = new MenuBarEditorView(document.querySelector("#editor"), {
+      state: editState,
+      dispatchTransaction: transaction => {
+        view.updateState(view.editor.state.apply(transaction));
+        fireProse.dispatchTransaction(transaction);
+      },
+      menuContent: buildMenuItems(schema).fullMenu
+    })
+
+    fireProse = FireProse.New(view, () => {
+      return view.editor.state;
+    }, baseref, newState => {
+      editor.style.display = 'block';
+    });
+  }
+</script>
