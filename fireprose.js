@@ -277,7 +277,6 @@ function FireProse() {
   }
 
   return {
-    ctor,
     dispatchTransaction
   }
 }
