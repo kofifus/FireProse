@@ -17,9 +17,13 @@
   <div id=editor style="width:500px; height:500px;display:none;"></div>
 </div>
 
-<script src="https://cdn.rawgit.com/kofifus/New/c5a12196/new.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.4.0/firebase.js"></script>
 <script src="bundle_collab.js"></script>
+<script> // https://github.com/kofifus/New.js
+  if(Function.prototype.New===undefined){Function.prototype.New=function(...a){function c(t,f){Object.getOwnPropertyNames(f).forEach(k=>{if(!t.hasOwnProperty(k))Object.defineProperty(t,k,Object.getOwnPropertyDescriptor(f,k))})}
+let h={};Object.setPrototypeOf(h,this.prototype);c(h,this.call(h,...a));if(h.composed){if(!Array.isArray(h.composed))h.composed=[h.composed];h.composed.forEach(p=>c(h,p));delete h.composed}
+return h}}
+</script>
 <script src="fireprose.js"></script>
 
 <script>
@@ -71,6 +75,9 @@
     const history = pmCollabReqs.history;
     const DOMParser = pmCollabReqs.DOMParser;
     const collab = pmCollabReqs.collab;
+    const Step = window.pmCollabReqs.Step;
+    const sendableSteps = window.pmCollabReqs.sendableSteps;
+
 
     const schema = new Schema({
       nodes: addListNodes(baseSchema.nodeSpec, "paragraph block*", "block"),
@@ -102,7 +109,7 @@
       menuContent: buildMenuItems(schema).fullMenu
     })
 
-    fireProse = FireProse.New(view, () => {
+    fireProse = FireProse.New(Step, sendableSteps, view, () => {
       return view.editor.state;
     }, baseref, newState => {
       editor.style.display = 'block';
