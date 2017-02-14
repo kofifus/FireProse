@@ -247,9 +247,9 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
   }
 
   function ctor() {
-     lastSendTime = new Date().getTime(),
+    lastSendTime = new Date().getTime();
     listeningVer = sendingVer = 0;
-  
+
     versionGetAll().then(versions => {
       if (versions.length === 0) {
         console.log('getAll() no versions');
