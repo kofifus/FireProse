@@ -1,14 +1,9 @@
 "use strict";
 
 // the FireProse 'class' using https://github.com/kofifus/New
-function FireProse() {
-  const Step = window.pmCollabReqs.Step;
-  const sendableSteps = window.pmCollabReqs.sendableSteps;
-
-  let baseref, view, getState, editState;
-
-  let lastSendTime;
-  let listeningVer, sendingVer;
+function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
+  let editState = getState();
+  let lastSendTime, listeningVer, sendingVer;
 
   const sendThrottleMs = 1000;
   const trace = true;
@@ -251,13 +246,8 @@ function FireProse() {
     });
   }
 
-  function ctor(view_, getState_, baseref_, loaded) {
-    view = view_;
-    getState = getState_;
-    baseref = baseref_;
-    editState = getState();
-
-    lastSendTime = new Date().getTime(),
+  function ctor() {
+     lastSendTime = new Date().getTime(),
     listeningVer = sendingVer = 0;
   
     versionGetAll().then(versions => {
@@ -276,6 +266,7 @@ function FireProse() {
     })
   }
 
+  ctor();
   return {
     dispatchTransaction
   }
