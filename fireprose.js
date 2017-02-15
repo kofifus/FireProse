@@ -1,11 +1,11 @@
 "use strict";
 
 // the FireProse 'class' using https://github.com/kofifus/New
-function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
+function FireProse(Step, sendableSteps, receiveTransaction, view, getState, baseref, loaded) {
   let editState = getState();
-  let lastSendTime, listeningVer, sendingVer;
+  let listeningVer, sendingVer;
 
-  const sendThrottleMs = 1000;
+  const sendThrottleMs = 2000;
   const trace = true;
 
   // helpers
@@ -33,7 +33,7 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
       log += (log ? ' , ' : '') + logVersion(versions[i]);
     }
 
-    let tr = window.pmCollabReqs.receiveTransaction(editState, steps, clientIDs);
+    let tr = receiveTransaction(editState, steps, clientIDs);
     editState = editState.apply(tr);
     if (updateView) view.updateState(getState().apply(tr));
     console.log((updateView ? 'received ' : 'sent ') + log);
@@ -78,7 +78,7 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
   // steps are converted from json
   function versionGetAll() {
     return baseref.orderByKey().once('value').then(snapshot => {
-      if (snapshot.val() === null) return null;
+      if (snapshot.val() === null) return [];
       let res = [];
       snapshot.forEach(childSnapshot => {
         let version = childSnapshot.val();
@@ -169,24 +169,13 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
 
   function dispatchTransaction(tr) {
     editState = editState.apply(tr);
-
-    // throttle sends
-    if (new Date().getTime() - lastSendTime > sendThrottleMs) {
-      send();
-    } else {
-      clearTimeout(dispatchTransaction.timeout)
-      dispatchTransaction.timeout = setTimeout(send, sendThrottleMs);
-    }
   }
 
   function send() {
     let sendable = sendableSteps(editState);
     if (!sendable) return;
 
-    if (listeningVer === -1) {
-      setTimeout(send, sendThrottleMs); // busy, try again
-      return;
-    }
+    if (listeningVer === -1) return; // busy, try again
 
     versionListen(-1);
     listeningVer = -1;
@@ -216,7 +205,6 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
         //if (trace) console.log('sent ' + logVersion(remoteVersion));
         receive([version]);
         listeningVer = sendingVer + 1;
-        lastSendTime = new Date().getTime();
       } else if (used) {
         if (trace) console.log('send cancelled, starting new version');
         listeningVer = ++sendingVer;
@@ -225,9 +213,7 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
       }
       listen();
     }, () => {
-      return;
-    }).then(() => {
-      setTimeout(send, sendThrottleMs);
+      return; // error, try again at same place
     });
   }
 
@@ -247,7 +233,6 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
   }
 
   function ctor() {
-    lastSendTime = new Date().getTime();
     listeningVer = sendingVer = 0;
 
     versionGetAll().then(versions => {
@@ -263,10 +248,13 @@ function FireProse(Step, sendableSteps, view, getState, baseref, loaded) {
       }
     }, err => {
       console.log('getAll error ' + err);
-    })
+    });
+    
+    setInterval(send, sendThrottleMs);
   }
 
   ctor();
+
   return {
     dispatchTransaction
   }
