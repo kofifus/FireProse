@@ -65,18 +65,19 @@ return h}}
 
 
   function start(baseref) {
-    const Schema = pmCollabReqs.Schema;
-    const baseSchema = pmCollabReqs.baseSchema;
-    const addListNodes = pmCollabReqs.addListNodes;
-    const exampleSetup = pmCollabReqs.exampleSetup;
-    const buildMenuItems = pmCollabReqs.buildMenuItems;
-    const MenuBarEditorView = pmCollabReqs.MenuBarEditorView;
-    const EditorState = pmCollabReqs.EditorState;
-    const history = pmCollabReqs.history;
-    const DOMParser = pmCollabReqs.DOMParser;
-    const collab = pmCollabReqs.collab;
+    const Schema = window.pmCollabReqs.Schema;
+    const baseSchema = window.pmCollabReqs.baseSchema;
+    const addListNodes = window.pmCollabReqs.addListNodes;
+    const exampleSetup = window.pmCollabReqs.exampleSetup;
+    const buildMenuItems = window.pmCollabReqs.buildMenuItems;
+    const MenuBarEditorView = window.pmCollabReqs.MenuBarEditorView;
+    const EditorState = window.pmCollabReqs.EditorState;
+    const history = window.pmCollabReqs.history;
+    const DOMParser = window.pmCollabReqs.DOMParser;
+    const collab = window.pmCollabReqs.collab;
     const Step = window.pmCollabReqs.Step;
     const sendableSteps = window.pmCollabReqs.sendableSteps;
+    const receiveTransaction=window.pmCollabReqs.receiveTransaction;
 
 
     const schema = new Schema({
@@ -109,7 +110,7 @@ return h}}
       menuContent: buildMenuItems(schema).fullMenu
     })
 
-    fireProse = FireProse.New(Step, sendableSteps, view, () => {
+    fireProse = FireProse.New(Step, sendableSteps, receiveTransaction, view, () => {
       return view.editor.state;
     }, baseref, newState => {
       editor.style.display = 'block';
